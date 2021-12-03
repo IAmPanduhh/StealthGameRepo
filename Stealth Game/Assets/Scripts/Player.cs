@@ -14,9 +14,6 @@ public class Player : MonoBehaviour
     [SerializeField] float runSpeed = 12f;
     [SerializeField] float rotateSpeed = 12f;
     [SerializeField] float jumpSpeed;
-    [SerializeField] float jumpButtonGracePeriod;
-    private float? lastGroundTime;
-    private float? jumpButtonPressedTime;
     [SerializeField] private KeyCode jumpKey;
     [SerializeField] private KeyCode runKey;
     [SerializeField] private KeyCode lightToggle;
@@ -26,8 +23,8 @@ public class Player : MonoBehaviour
 
     CharacterController controller = null;
     private float originalStepOffset;
-    private float ySpeed;
-    public bool isJumping;
+    [SerializeField] private float ySpeed;
+    Vector3 velocity;
 
     Animator animator;
     public GameObject playerLightGO;
@@ -71,9 +68,9 @@ public class Player : MonoBehaviour
 
         moveDir = Quaternion.AngleAxis(cameraTransform.rotation.eulerAngles.y, Vector3.up) * moveDir;
         moveDir.Normalize();
-        ySpeed += Physics.gravity.y * Time.deltaTime;
+        ySpeed += Physics.gravity.y / 3 * Time.deltaTime;
 
-        if (moveDir != Vector3.zero && controller.isGrounded && !isJumping)
+        if (moveDir != Vector3.zero && controller.isGrounded)
         {
             animator.SetBool("run", true);
         }
@@ -82,16 +79,11 @@ public class Player : MonoBehaviour
             animator.SetBool("run", false);
         }
 
-        if (controller.isGrounded)
-        {
-            lastGroundTime = Time.time;
-        }
-
         JumpInput();
 
         float currentSpeed = (running) ? runSpeed : walkSpeed; //Sets the speed when moving
 
-        Vector3 velocity = moveDir * currentSpeed;
+        velocity = moveDir * currentSpeed;
         velocity.y = ySpeed;
         controller.Move(velocity * Time.deltaTime);
 
@@ -104,25 +96,17 @@ public class Player : MonoBehaviour
 
     void JumpInput()
     {
-        if (Input.GetKeyDown(jumpKey) && !isJumping)
+        if (controller.isGrounded)
         {
-            isJumping = true;
-            animator.SetBool("jump", true);
-            jumpButtonPressedTime = Time.time;
-        }
-
-        if (Time.time - lastGroundTime <= jumpButtonGracePeriod)
-        {
+            animator.SetBool("jump", false);
             controller.stepOffset = originalStepOffset;
             ySpeed = -0.5f;
 
-            if (Time.time - jumpButtonPressedTime <= jumpButtonGracePeriod)
+            if (Input.GetKeyDown(jumpKey))
             {
+                animator.SetBool("jump", true);
+                animator.SetBool("run", false);
                 ySpeed = jumpSpeed;
-                jumpButtonPressedTime = null;
-                lastGroundTime = null;
-                isJumping = false;
-                animator.SetBool("jump", false);
             }
         }
         else
