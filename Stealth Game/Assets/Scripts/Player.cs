@@ -30,7 +30,7 @@ public class Player : MonoBehaviour
         if (isMoving)
         {
             movement.x = Input.GetAxisRaw("Horizontal");
-            movement.y = Input.GetAxisRaw("Vertical");
+            //movement.y = Input.GetAxisRaw("Vertical");
 
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = 0;
